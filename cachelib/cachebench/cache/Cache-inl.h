@@ -72,6 +72,11 @@ Cache<Allocator>::Cache(const CacheConfig& config,
       std::chrono::milliseconds(config_.backgroundEvictorIntervalMilSec),
       config_.evictorThreads);
 
+  allocatorConfig_.enableBackgroundPromoter(
+      config_.getBackgroundPromoterStrategy(),
+      std::chrono::milliseconds(config_.backgroundPromoterIntervalMilSec),
+      config_.promoterThreads);
+
   if (config_.moveOnSlabRelease && movingSync != nullptr) {
     allocatorConfig_.enableMovingOnSlabRelease(
         [](Item& oldItem, Item& newItem, Item* parentPtr) {
@@ -283,6 +288,7 @@ Cache<Allocator>::Cache(const CacheConfig& config,
   allocatorConfig_.defaultTierChancePercentage = config_.defaultTierChancePercentage;
   allocatorConfig_.numDuplicateElements = config_.numDuplicateElements;
   allocatorConfig_.syncPromotion = config_.syncPromotion;
+  allocatorConfig_.promotionAcWatermark = config_.promotionAcWatermark;
 
   if (!allocatorConfig_.cacheDir.empty()) {
     cache_ =
