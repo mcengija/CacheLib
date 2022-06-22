@@ -43,7 +43,7 @@ void BackgroundEvictor<CacheT>::work() {
 template <typename CacheT>
 void BackgroundEvictor<CacheT>::setAssignedMemory(std::vector<std::tuple<TierId, PoolId, ClassId>> &&assignedMemory)
 {
-  XLOG(INFO, "Memory assigned to background worker:");
+  XLOG(INFO, "Class assigned to background worker:");
   for (auto [tid, pid, cid] : assignedMemory) {
     XLOGF(INFO, "Tid: {}, Pid: {}, Cid: {}", tid, pid, cid);
   }

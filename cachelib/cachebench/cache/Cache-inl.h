@@ -542,6 +542,11 @@ Stats Cache<Allocator>::getStats() const {
             cacheStats.evictionStats.totalClasses;
   ret.backgndEvicStats.evictionSize =
             cacheStats.evictionStats.evictionSize;
+  
+  ret.backgndPromoStats.nPromotedItems =
+            cacheStats.promotionStats.numPromotedItems;
+  ret.backgndPromoStats.nTraversals =
+            cacheStats.promotionStats.runCount;
 
   ret.numEvictions = aggregate.numEvictions();
   ret.numItems = aggregate.numItems();
@@ -594,6 +599,7 @@ Stats Cache<Allocator>::getStats() const {
   }
 
   ret.backgroundEvictionClasses = cache_->getBackgroundEvictorClassStats();
+  ret.backgroundPromotionClasses = cache_->getBackgroundPromoterClassStats();
 
   // nvm stats from navy
   if (!isRamOnly() && !navyStats.empty()) {

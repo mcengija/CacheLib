@@ -1,36 +1,41 @@
 // @nolint instantiates a small cache and runs a quick run of basic operations.
 {
   "cache_config" : {
-    "cacheSizeMB" : 512,
+    "cacheSizeMB" : 1024,
     "usePosixShm" : true,
     "persistedCacheDir" : "/tmp/mem-tiers",
     "memoryTiers" : [
       {
         "ratio": 1,
-        "file": "/tmp/mem-tiers/memory-mapped-tier"
+        "file": "/tmp/mem-tiers/memory-mapped-tier1"
+      },
+      {
+        "ratio": 1,
+        "file": "/tmp/mem-tiers/memory-mapped-tier2"
       }
     ],
-    "poolRebalanceIntervalSec" : 1,
+    "poolRebalanceIntervalSec" : 0,
     "moveOnSlabRelease" : false,
-
-    "numPools" : 2,
-    "poolSizes" : [0.3, 0.7]
+    "backgroundEvictorIntervalMilSec": 10,
+    "backgroundPromoterIntervalMilSec": 10,
+    "promoterThreads": 2,
+    "evictorThreads": 2,
+    "evictionHotnessThreshold": 100,
+    "numDuplicateElements": 100,
+    "promotionAcWatermark": 100
   },
   "test_config" : {
-      "numOps" : 100000,
-      "numThreads" : 32,
-      "numKeys" : 1000000,
-
+      "numOps" : 1000000,
+      "numThreads" : 16,
+      "numKeys" : 500000,
+      "enableLookaside": true,
       "keySizeRange" : [1, 8, 64],
       "keySizeRangeProbability" : [0.3, 0.7],
 
       "valSizeRange" : [1, 32, 10240, 409200],
       "valSizeRangeProbability" : [0.1, 0.2, 0.7],
 
-      "getRatio" : 0.15,
-      "setRatio" : 0.8,
-      "delRatio" : 0.05,
-      "keyPoolDistribution": [0.4, 0.6],
-      "opPoolDistribution" : [0.5, 0.5]
+      "getRatio" : 1
+
   }
 }

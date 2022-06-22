@@ -68,13 +68,13 @@ class BackgroundPromoter : public PeriodicWorker {
   ~BackgroundPromoter() override;
   
   // TODO
-  //BackgroundPromotionStats getStats() const noexcept;
-  //std::map<uint32_t,uint64_t> getClassStats() const noexcept;
+  BackgroundPromotionStats getStats() const noexcept;
+  std::map<uint32_t,uint64_t> getClassStats() const noexcept;
 
   void setAssignedMemory(std::vector<std::tuple<TierId, PoolId, ClassId>> &&assignedMemory);
 
  private:
-   std::map<uint32_t,uint64_t> evictions_per_class_;
+   std::map<uint32_t,uint64_t> promotions_per_class_;
 
   // cache allocator's interface for evicting
   
@@ -87,7 +87,7 @@ class BackgroundPromoter : public PeriodicWorker {
   void work() override final;
   void checkAndRun();
 
-  // BackgrounPromoterStats stats;
+  BackgroundPromoterStats stats;
 
   std::vector<std::tuple<TierId, PoolId, ClassId>> assignedMemory_;
   folly::DistributedMutex mutex;

@@ -1057,13 +1057,47 @@ class CacheAllocator : public CacheBase {
     return stats;
   }
   
+  BackgroundPromotionStats getBackgroundPromoterStats() const {
+    auto stats = BackgroundPromotionStats{};
+    for (auto &bg : backgroundPromoter_)
+      stats += bg->getStats();
+    return stats;
+  }
+  
   std::map<uint32_t,uint64_t> getBackgroundEvictorClassStats() const {
     auto stats = std::map<uint32_t,uint64_t>();
 
-    if (backgroundEvictor_.size()) stats = backgroundEvictor_[0]->getClassStats();
-    // XXX: implement aggregation
-    // for (auto &bg : backgroundEvictor_)
-    //   stats += bg->getClassStats();
+    for (auto &bg : backgroundEvictor_) {
+        for (const auto entry : bg->getClassStats()) {
+            auto cid = entry.first;
+            auto count = entry.second;
+            auto it = stats.find(cid);
+            if ( it != stats.end() ) {
+                it->second += count;
+            } else {
+                stats[cid] = count;
+            }
+        }
+    }
+
+    return stats;
+  }
+  
+  std::map<uint32_t,uint64_t> getBackgroundPromoterClassStats() const {
+    auto stats = std::map<uint32_t,uint64_t>();
+
+    for (auto &bg : backgroundPromoter_) {
+        for (const auto entry : bg->getClassStats()) {
+            auto cid = entry.first;
+            auto count = entry.second;
+            auto it = stats.find(cid);
+            if ( it != stats.end() ) {
+                it->second += count;
+            } else {
+                stats[cid] = count;
+            }
+        }
+    }
 
     return stats;
   }

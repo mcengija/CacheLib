@@ -1,0 +1,40 @@
+diff --git a/cachelib/allocator/MMLru-inl.h b/cachelib/allocator/MMLru-inl.h
+index 32972f06..8af8fcad 100644
+--- a/cachelib/allocator/MMLru-inl.h
++++ b/cachelib/allocator/MMLru-inl.h
+@@ -256,6 +256,9 @@ void MMLru::Container<T, HookPtr>::removeLocked(T& node) {
+ 
+ template <typename T, MMLru::Hook<T> T::*HookPtr>
+ bool MMLru::Container<T, HookPtr>::remove(T& node) noexcept {
++  //we are 99.9% sure that this is protected - this is the default 
++  //method for removing from container from upstream.
++  folly::annotate_ignore_thread_sanitizer_guard g(__FILE__, __LINE__);
+   return lruMutex_->lock_combine([this, &node]() {
+     if (!node.isInMMContainer()) {
+       return false;
+diff --git a/cachelib/allocator/MMLru.h b/cachelib/allocator/MMLru.h
+index 8c0710f9..e1143b42 100644
+--- a/cachelib/allocator/MMLru.h
++++ b/cachelib/allocator/MMLru.h
+@@ -250,6 +250,9 @@ class MMLru {
+       // 1. Invalidate this iterator
+       // 2. Unlock
+       void destroy() {
++        //we are 99.9% sure that this is protected - this is the default 
++        //method for removing from container from upstream.
++        folly::annotate_ignore_thread_sanitizer_guard g(__FILE__, __LINE__);
+         LruList::Iterator::reset();
+         if (l_.owns_lock()) {
+           l_.unlock();
+diff --git a/cachelib/external/fbthrift b/cachelib/external/fbthrift
+--- a/cachelib/external/fbthrift
++++ b/cachelib/external/fbthrift
+@@ -1 +1 @@
+-Subproject commit 8858efe9bd495c1a3bef56f1383474ae878aff71
++Subproject commit 8858efe9bd495c1a3bef56f1383474ae878aff71-dirty
+diff --git a/cachelib/external/folly b/cachelib/external/folly
+--- a/cachelib/external/folly
++++ b/cachelib/external/folly
+@@ -1 +1 @@
+-Subproject commit 6b9d840afc8fe38ac52db1438cdee9d02adce99f
++Subproject commit 6b9d840afc8fe38ac52db1438cdee9d02adce99f-dirty
