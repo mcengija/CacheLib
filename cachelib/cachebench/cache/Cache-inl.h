@@ -132,6 +132,7 @@ Cache<Allocator>::Cache(const CacheConfig& config,
   });
 
   allocatorConfig_.evictionHotnessThreshold = config_.evictionHotnessThreshold;
+  allocatorConfig_.forceAllocationTier = config_.forceAllocationTier;
 
   if (config_.enableItemDestructorCheck) {
     auto removeCB = [&](const typename Allocator::DestructorData& data) {

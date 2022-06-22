@@ -118,6 +118,7 @@ CacheConfig::CacheConfig(const folly::dynamic& configJson) {
   JSONSetVal(configJson, persistedCacheDir);
   JSONSetVal(configJson, usePosixShm);
   JSONSetVal(configJson, evictionHotnessThreshold);
+  JSONSetVal(configJson, forceAllocationTier);
 
   if (configJson.count("memoryTiers")) {
     for (auto& it : configJson["memoryTiers"]) {
@@ -128,7 +129,7 @@ CacheConfig::CacheConfig(const folly::dynamic& configJson) {
   // if you added new fields to the configuration, update the JSONSetVal
   // to make them available for the json configs and increment the size
   // below
-  checkCorrectSize<CacheConfig, 912>();
+  checkCorrectSize<CacheConfig, 920>();
 
   if (numPools != poolSizes.size()) {
     throw std::invalid_argument(folly::sformat(

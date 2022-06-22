@@ -631,6 +631,8 @@ class CacheAllocatorConfig {
   // can look at most at this many elements for eviction/promotion in BG (0 == no limit)
   uint64_t evictionHotnessThreshold{200};
 
+  uint64_t forceAllocationTier{UINT64_MAX};
+
   friend CacheT;
 
  private:

@@ -696,7 +696,7 @@ class CacheAllocator : public CacheBase {
                  std::shared_ptr<RebalanceStrategy> resizeStrategy = nullptr,
                  bool ensureProvisionable = false);
 
-  auto getAssignedMemoryToBgWorker(size_t evictorId, size_t numWorkers);
+  auto getAssignedMemoryToBgWorker(size_t evictorId, size_t numWorkers, TierId tid);
 
   // update an existing pool's config
   //

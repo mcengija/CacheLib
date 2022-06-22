@@ -483,6 +483,10 @@ CacheAllocator<CacheTrait>::getTargetTierForItem(PoolId pid,
   if (numTiers_ == 1)
     return 0;
 
+  if (config_.forceAllocationTier != UINT64_MAX) {
+    return config_.forceAllocationTier;
+  }
+
   const TierId defaultTargetTier = 0;
 
   // Look at total amount of free slabs first. If there are some, it
@@ -2344,12 +2348,12 @@ PoolId CacheAllocator<CacheTrait>::addPool(
 
   if (backgroundEvictor_.size()) {
     for (size_t id = 0; id < backgroundEvictor_.size(); id++)
-      backgroundEvictor_[id]->setAssignedMemory(getAssignedMemoryToBgWorker(id, backgroundEvictor_.size()));
+      backgroundEvictor_[id]->setAssignedMemory(getAssignedMemoryToBgWorker(id, backgroundEvictor_.size(), 0));
   }
 
   if (backgroundPromoter_.size()) {
     for (size_t id = 0; id < backgroundPromoter_.size(); id++)
-      backgroundPromoter_[id]->setAssignedMemory(getAssignedMemoryToBgWorker(id, backgroundPromoter_.size()));
+      backgroundPromoter_[id]->setAssignedMemory(getAssignedMemoryToBgWorker(id, backgroundPromoter_.size(), 1));
   }
 
   return pid;
@@ -3784,18 +3788,16 @@ bool CacheAllocator<CacheTrait>::startNewReaper(
 }
 
 template <typename CacheTrait>
-auto CacheAllocator<CacheTrait>::getAssignedMemoryToBgWorker(size_t evictorId, size_t numWorkers)
+auto CacheAllocator<CacheTrait>::getAssignedMemoryToBgWorker(size_t evictorId, size_t numWorkers, TierId tid)
 {
   std::vector<std::tuple<TierId, PoolId, ClassId>> asssignedMemory;
   // TODO: for now, only evict from tier 0
-  for (TierId tid = 0; tid < 1; tid++) {
-    auto pools = filterCompactCachePools(allocator_[tid]->getPoolIds());
-    for (const auto pid : pools) {
-      const auto& mpStats = getPoolByTid(pid,tid).getStats();
-      for (const auto cid : mpStats.classIds) {
-        if (backgroundWorkerId(tid, pid, cid, numWorkers) == evictorId) {
-          asssignedMemory.emplace_back(tid, pid, cid);
-        }
+  auto pools = filterCompactCachePools(allocator_[tid]->getPoolIds());
+  for (const auto pid : pools) {
+    const auto& mpStats = getPoolByTid(pid,tid).getStats();
+    for (const auto cid : mpStats.classIds) {
+      if (backgroundWorkerId(tid, pid, cid, numWorkers) == evictorId) {
+        asssignedMemory.emplace_back(tid, pid, cid);
       }
     }
   }
@@ -3816,7 +3818,7 @@ bool CacheAllocator<CacheTrait>::startNewBackgroundEvictor(
     result = result && ret;
 
     if (result) {
-      backgroundEvictor_[i]->setAssignedMemory(getAssignedMemoryToBgWorker(i, backgroundEvictor_.size()));
+      backgroundEvictor_[i]->setAssignedMemory(getAssignedMemoryToBgWorker(i, backgroundEvictor_.size(), 0));
     }
   }
   return result;
@@ -3828,6 +3830,7 @@ bool CacheAllocator<CacheTrait>::startNewBackgroundPromoter(
     std::shared_ptr<BackgroundEvictorStrategy> strategy,
     size_t threads) {
   XDCHECK(threads > 0);
+  XDCHECK(numTiers_ > 1);
   backgroundPromoter_.resize(threads);
   bool result = true;
 
@@ -3836,7 +3839,7 @@ bool CacheAllocator<CacheTrait>::startNewBackgroundPromoter(
     result = result && ret;
 
     if (result) {
-      backgroundPromoter_[i]->setAssignedMemory(getAssignedMemoryToBgWorker(i, backgroundPromoter_.size()));
+      backgroundPromoter_[i]->setAssignedMemory(getAssignedMemoryToBgWorker(i, backgroundPromoter_.size(), 1));
     }
   }
   return result;

@@ -314,6 +314,8 @@ struct CacheConfig : public JSONConfig {
 
   uint64_t evictionHotnessThreshold{200};
 
+  uint64_t forceAllocationTier{UINT64_MAX};
+
   explicit CacheConfig(const folly::dynamic& configJson);
 
   CacheConfig() {}
