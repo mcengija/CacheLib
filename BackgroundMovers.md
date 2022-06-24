@@ -16,6 +16,13 @@ The background evictors scan each class to see if there are objects to move the 
 tier using a given strategy. Here we document the parameters for the different
 strategies and general parameters. 
 
+- `backgroundEvictorIntervalMilSec`: The interval that this thread runs for - by default
+the background evictor threads will wake up every 10 ms to scan the AllocationClasses. Also,
+the background evictor thead will be woken up everytime there is a failed allocation (from
+a request handling thread) and the current percentage of allocated slabs for the 
+AllocationClass exceed the `lowEvictionAcWatermark`. This may render the interval parameter
+not as important when there are many allocations occuring from request handling threads. 
+
 - `evictorThreads`: The number of background evictors to run - each thread is a assigned
 a set of AllocationClasses to scan and evict objects from. Currently, each thread gets
 an equal number of classes to scan - but as object size distribution may be unequal - future
@@ -48,6 +55,10 @@ don't set this below `90`.
 The background promotes scan each class to see if there are objects to move to a lower
 tier using a given strategy. Here we document the parameters for the different
 strategies and general parameters.
+
+- `backgroundPromoterIntervalMilSec`: The interval that this thread runs for - by default
+the background promoter threads will wake up every 10 ms to scan the AllocationClasses for
+objects to promote.
 
 - `promoterThreads`: The number of background promoters to run - each thread is a assigned
 a set of AllocationClasses to scan and promote objects from. Currently, each thread gets
