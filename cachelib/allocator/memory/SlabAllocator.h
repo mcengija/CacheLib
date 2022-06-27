@@ -44,6 +44,8 @@ namespace tests {
 class AllocTestBase;
 }
 
+static inline size_t roundDownToSlabSize(size_t size) { return size - (size % sizeof(Slab)); }
+
 // Given a contiguous piece of memory, divides it up into slabs. The slab
 // allocator is also responsible for providing memory for the slab headers for
 // each slab.
