@@ -48,15 +48,12 @@ struct MemoryTierConfig : public JSONConfig {
   explicit MemoryTierConfig(const folly::dynamic& configJson);
   MemoryTierCacheConfig getMemoryTierCacheConfig() {
     MemoryTierCacheConfig config = memoryTierCacheConfigFromSource();
-    config.setSize(size).setRatio(ratio);
-    config.markUsefulChance = markUsefulChance;
-    config.lruInsertionPointSpec = lruInsertionPointSpec;
+    config.setRatio(ratio);
     return config;
   }
 
   std::string file{""};
   size_t ratio{0};
-  size_t size{0};
 
   double markUsefulChance{100.0}; // call mark useful only with this
   uint32_t lruInsertionPointSpec{0};

@@ -39,10 +39,6 @@
 
 using namespace facebook::cachelib;
 
-namespace {
-size_t roundDownToSlabSize(size_t size) { return size - (size % sizeof(Slab)); }
-} // namespace
-
 // definitions to avoid ODR violation.
 using PtrType = CompressedPtr::PtrType;
 constexpr uint64_t SlabAllocator::kAddressMask;

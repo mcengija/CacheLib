@@ -201,6 +201,17 @@ ShmSegmentOpts CacheAllocator<CacheTrait>::createShmCacheOpts(TierId tid) {
 }
 
 template <typename CacheTrait>
+size_t CacheAllocator<CacheTrait>::memoryTierSize(TierId tid) const
+{
+  auto partitions = std::accumulate(memoryTierConfigs.begin(), memoryTierConfigs.end(), 0UL,
+  [](const size_t i, const MemoryTierCacheConfig& config){
+    return i + config.getRatio();
+  });
+
+  return roundDownToSlabSize(memoryTierConfigs[tid].calculateTierSize(config_.getCacheSize(), partitions));
+}
+
+template <typename CacheTrait>
 std::unique_ptr<MemoryAllocator>
 CacheAllocator<CacheTrait>::createNewMemoryAllocator(TierId tid) {
   return std::make_unique<MemoryAllocator>(
@@ -210,7 +221,8 @@ CacheAllocator<CacheTrait>::createNewMemoryAllocator(TierId tid) {
                       config_.getCacheSize(), config_.slabMemoryBaseAddr,
                       createShmCacheOpts(tid))
           .addr,
-      memoryTierConfigs[tid].getSize());
+          memoryTierSize(tid)
+      );
 }
 
 template <typename CacheTrait>
@@ -221,7 +233,7 @@ CacheAllocator<CacheTrait>::restoreMemoryAllocator(TierId tid) {
       shmManager_
           ->attachShm(detail::kShmCacheName + std::to_string(tid),
             config_.slabMemoryBaseAddr, createShmCacheOpts(tid)).addr,
-      memoryTierConfigs[tid].getSize(),
+      memoryTierSize(tid),
       config_.disableFullCoredump);
 }
 
@@ -2332,12 +2344,27 @@ PoolId CacheAllocator<CacheTrait>::addPool(
   folly::SharedMutex::WriteHolder w(poolsResizeAndRebalanceLock_);
 
   PoolId pid = 0;
-  auto tierConfigs = config_.getMemoryTierConfigs();
+  std::vector<size_t> tierPoolSizes;
+  const auto &tierConfigs = config_.getMemoryTierConfigs();
+  size_t totalCacheSize = 0;
+
   for (TierId tid = 0; tid < numTiers_; tid++) {
-    auto tierSizeRatio = static_cast<double>(
-        tierConfigs[tid].getSize()) / config_.getCacheSize();
-    auto tierPoolSize = static_cast<size_t>(tierSizeRatio * size);
-    auto res = allocator_[tid]->addPool(name, tierPoolSize, allocSizes, ensureProvisionable);
+    totalCacheSize += memoryTierSize(tid);
+  }
+
+  for (TierId tid = 0; tid < numTiers_; tid++) {
+    auto tierSizeRatio =
+        static_cast<double>(memoryTierSize(tid)) / totalCacheSize;
+    size_t tierPoolSize = roundDownToSlabSize(static_cast<size_t>(tierSizeRatio * size));
+
+    tierPoolSizes.push_back(tierPoolSize);
+  }
+
+  for (TierId tid = 0; tid < numTiers_; tid++) {
+    // TODO: what if we manage to add pool only in one tier?
+    // we should probably remove that on failure
+    auto res = allocator_[tid]->addPool(
+        name, tierPoolSizes[tid], allocSizes, ensureProvisionable);
     XDCHECK(tid == 0 || res == pid);
     pid = res;
   }
@@ -2420,10 +2447,6 @@ void CacheAllocator<CacheTrait>::createMMContainers(const PoolId pid,
                   .getAllocsPerSlab()
             : 0);
     for (TierId tid = 0; tid < numTiers_; tid++) {
-      if constexpr (std::is_same_v<MMConfig, MMLru::Config> || std::is_same_v<MMConfig, MM2Q::Config>) {
-        config.lruInsertionPointSpec  = config_.memoryTierConfigs[tid].lruInsertionPointSpec ;
-        config.markUsefulChance = config_.memoryTierConfigs[tid].markUsefulChance;
-      }
       mmContainers_[tid][pid][cid].reset(new MMContainer(config, compressor_));
     }
   }
@@ -2512,6 +2535,16 @@ std::set<PoolId> CacheAllocator<CacheTrait>::getRegularPoolIdsForResize()
 template <typename CacheTrait>
 const std::string CacheAllocator<CacheTrait>::getCacheName() const {
   return config_.cacheName;
+}
+
+template <typename CacheTrait>
+size_t CacheAllocator<CacheTrait>::getPoolSize(PoolId poolId) const {
+  size_t poolSize = 0;
+  for (auto& allocator: allocator_) {
+    const auto& pool = allocator->getPool(poolId);
+    poolSize += pool.getPoolSize();
+  }
+  return poolSize;
 }
 
 template <typename CacheTrait>

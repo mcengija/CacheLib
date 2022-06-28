@@ -179,11 +179,7 @@ std::shared_ptr<BackgroundEvictorStrategy> CacheConfig::getBackgroundPromoterStr
 MemoryTierConfig::MemoryTierConfig(const folly::dynamic& configJson) {
   JSONSetVal(configJson, file);
   JSONSetVal(configJson, ratio);
-  JSONSetVal(configJson, size);
-  JSONSetVal(configJson, markUsefulChance);
-  JSONSetVal(configJson, lruInsertionPointSpec);
-
-  checkCorrectSize<MemoryTierConfig, 64>();
+  checkCorrectSize<MemoryTierConfig, 56>();
 }
 
 } // namespace cachebench
