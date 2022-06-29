@@ -43,7 +43,7 @@ set(PACKAGE_BUGREPORT "https://github.com/facebook/TBD")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(BUILD_TESTS "If enabled, compile the tests." ON)
-
+option(SHOW_THREAD "If enabled, compile with thread sanitizer." ON)
 
 set(BIN_INSTALL_DIR bin CACHE STRING
     "The subdirectory where binaries should be installed")
@@ -377,6 +377,11 @@ if (BUILD_SHARED_LIBS)
     SOVERSION ${CACHELIB_MAJOR_VERSION}
     VERSION ${PACKAGE_VERSION}
   )
+endif ()
+
+if (SHOW_THREAD)
+  message(WARNING "*************************** I AM IN THE SHOW_THREAD IF STATEMENT!!!!!**************************")
+  add_link_options(-latomic)
 endif ()
 
 if (BUILD_TESTS)

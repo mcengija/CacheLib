@@ -90,12 +90,13 @@ show_help_and_exit()
   base=$(basename "$0")
   echo "CacheLib dependencies builder
 
-usage: $base [-BdhijOStv]
+usage: $base [-BdghijOStv]
 
 options:
   -B    skip build - just download packages and git source
   -d    build with DEBUG configuration
         (default is RELEASE with debug information)
+  -g    build with thread sanitizer
   -h    This help screen
   -j    build using all available CPUs ('make -j')
         (default is to use single CPU)
@@ -119,15 +120,15 @@ skip_os_pkgs=
 skip_build=
 show_help=
 build_cachelib_tests=
-while getopts BdhjOStvT param
+while getopts BdghjOStvT param
 do
   case $param in
   h)  show_help=yes ;;
   O)  skip_os_pkgs=yes ;;
   B)  skip_build=yes ;;
-  d|j|S|t|v) pass_params="$pass_params -$param" ;;
+  d|g|j|S|t|v) pass_params="$pass_params -$param" ;;
   T)  build_cachelib_tests=yes ;;
-  ?)      die "unknown option. See -h for help."
+  ?)  die "unknown option. See -h for help."
   esac
 done
 test -n "$show_help" && show_help_and_exit;

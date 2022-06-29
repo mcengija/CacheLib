@@ -76,15 +76,17 @@ source=yes
 debug_build=
 build_tests=
 show_help=
+show_thread=
 many_jobs=
 verbose=
 install_path=
-while getopts :BSdhijtvI: param
+while getopts :BSdghijtvI: param
 do
   case $param in
     i) install=yes ;;
     B) build= ;;
     S) source= ;;
+    g) show_thread=yes ;;
     h) show_help=yes ;;
     d) debug_build=yes ;;
     v) verbose=yes ;;
@@ -238,6 +240,13 @@ case "$1" in
   cachelib)
     NAME=cachelib
     SRCDIR=cachelib
+    if test "$show_thread" = "yes" ; then
+        cmake_custom_params="$cmake_custom_params -DSHOW_THREAD=ON"
+        cmake_custom_params="$cmake_custom_params -DCMAKE_CXX_COMPILER=/usr/bin/clang++"
+        cmake_custom_params="$cmake_custom_params -DCMAKE_C_COMPILER=/usr/bin/clang"
+        cmake_custom_params="$cmake_custom_params -DCMAKE_CXX_FLAGS=-fsanitize=thread"
+    fi
+
     if test "$build_tests" = "yes" ; then
         cmake_custom_params="$cmake_custom_params -DBUILD_TESTS=ON"
     else
